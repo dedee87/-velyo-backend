@@ -66,7 +66,7 @@ exports.handler = async (event) => {
       { role: "user", content: message.trim() },
     ];
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("https://velyoff.netlify.app/.netlify/functions/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
