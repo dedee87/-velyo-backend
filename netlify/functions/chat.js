@@ -1,5 +1,5 @@
 // netlify/functions/chat.js
-const Anthropic = require("@anthropic-ai/sdk");
+// Version sans dépendances — utilise fetch natif Node 18+
 
 const CLIENT_DATA = {
   "demo-immo": {
@@ -9,16 +9,15 @@ const CLIENT_DATA = {
       Nom : Agence Immo Horizon
       Services : Estimation gratuite, Gestion locative, Vente de biens
       Zones : Paris et petite couronne
-      Lien RDV : https://calendly.com/immo-horizon/15min
       Horaires : Lundi-Vendredi 9h-19h, Samedi 10h-17h
       Honoraires : 4% TTC sur les ventes
+      RDV : https://calendly.com/immo-horizon/15min
     `,
   },
 };
 
 function buildSystemPrompt(client) {
-  return `
-Tu es ${client.agentName}, agent commercial de ${client.companyName}. Tu fais partie de l'équipe, tu n'es pas un robot.
+  return `Tu es ${client.agentName}, agent commercial de ${client.companyName}. Tu fais partie de l'équipe, tu n'es pas un robot.
 
 DONNÉES STRICTES — ta seule source de vérité :
 ${client.data}
@@ -31,8 +30,7 @@ RÈGLE N°2 — COMPORTEMENT :
 - Maximum 3 phrases par réponse
 - Termine toujours par une question orientée prise de RDV
 - Ne dis jamais "Je suis une IA" ou "Je suis un robot"
-- Ne salue jamais deux fois
-  `.trim();
+- Ne salue jamais deux fois`;
 }
 
 exports.handler = async (event) => {
@@ -63,30 +61,36 @@ exports.handler = async (event) => {
       return { statusCode: 404, headers, body: JSON.stringify({ error: "Client introuvable." }) };
     }
 
-    const anthropic = new Anthropic.default({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    });
-
     const messages = [
       ...history.filter((m) => m.role && m.content),
       { role: "user", content: message.trim() },
     ];
 
-    const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 300,
-      temperature: 0.2,
-      system: buildSystemPrompt(client),
-      messages,
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 300,
+        temperature: 0.2,
+        system: buildSystemPrompt(client),
+        messages,
+      }),
     });
 
-    const reply = response.content[0]?.text ?? "Je rencontre un problème technique. Pouvez-vous reformuler ?";
+    const data = await response.json();
+    const reply = data?.content?.[0]?.text ?? "Je rencontre un problème technique. Pouvez-vous reformuler ?";
 
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({ reply }),
     };
+
   } catch (error) {
     console.error("[Velyo] Erreur:", error);
     return {
