@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Velyo Immo</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Sora:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── FAUX SITE CLIENT ── */
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #f8f7f4;
+  color: #1a1a1a;
+}
+
+.site-header {
+  background: #1a1a2e;
+  padding: 18px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.site-logo {
+  font-family: 'Sora', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.site-nav {
+  display: flex;
+  gap: 24px;
+}
+
+.site-nav a {
+  color: rgba(255,255,255,0.6);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.site-hero {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  padding: 80px 32px;
+  text-align: center;
+  color: white;
+}
+
+.site-hero h1 {
+  font-family: 'Sora', sans-serif;
+  font-size: clamp(28px, 5vw, 48px);
+  font-weight: 600;
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+
+.site-hero p {
+  font-size: 16px;
+  color: rgba(255,255,255,0.65);
+  max-width: 480px;
+  margin: 0 auto 32px;
+  line-height: 1.6;
+}
+
+.site-cta {
+  background: #e94560;
+  color: white;
+  padding: 14px 32px;
+  border-radius: 100px;
+  font-weight: 600;
+  font-size: 15px;
+  border: none;
+  cursor: pointer;
+}
+
+.site-services {
+  padding: 64px 32px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.site-services h2 {
+  font-family: 'Sora', sans-serif;
+  font-size: 26px;
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.service-card {
+  background: white;
+  border-radius: 16px;
+  padding: 28px 24px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+}
+
+.service-icon { font-size: 28px; margin-bottom: 12px; }
+.service-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.service-card p { font-size: 13px; color: #777; line-height: 1.5; }
+
+/* ── WIDGET VELYO ── */
+#vly-trigger {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e94560, #c73652);
+  border: none;
+  cursor: pointer;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 28px rgba(233,69,96,0.45);
+  transition: transform 0.2s;
+}
+
+#vly-trigger:hover { transform: scale(1.08); }
+
+#vly-trigger svg { width: 24px; height: 24px; transition: all 0.2s; }
+#vly-trigger .ic-close { position: absolute; opacity: 0; transform: rotate(-90deg); }
+#vly-trigger.open .ic-chat { opacity: 0; transform: rotate(90deg); }
+#vly-trigger.open .ic-close { opacity: 1; transform: rotate(0); }
+
+#vly-notif {
+  position: absolute;
+  top: -2px; right: -2px;
+  width: 18px; height: 18px;
+  background: white;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  color: #e94560;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+#vly-notif.hidden { opacity: 0; }
+
+#vly-window {
+  position: fixed;
+  bottom: 94px;
+  right: 24px;
+  width: 340px;
+  max-height: 520px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 70px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 9998;
+  transform: translateY(12px) scale(0.97);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.28s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+#vly-window.open {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+  pointer-events: all;
+}
+
+#vly-header {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vly-av {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e94560, #ff8c9e);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Sora', sans-serif;
+  font-size: 15px; font-weight: 600; color: white;
+  flex-shrink: 0;
+}
+
+.vly-info { flex: 1; }
+.vly-name { font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 600; color: white; }
+.vly-status { font-size: 11px; color: rgba(255,255,255,0.5); display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+.vly-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.vly-brand { font-size: 9px; color: rgba(255,255,255,0.2); letter-spacing: 2px; text-transform: uppercase; }
+
+#vly-msgs {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scroll-behavior: smooth;
+}
+
+#vly-msgs::-webkit-scrollbar { width: 3px; }
+#vly-msgs::-webkit-scrollbar-thumb { background: #e8e8f0; border-radius: 10px; }
+
+.msg {
+  display: flex;
+  flex-direction: column;
+  max-width: 84%;
+  animation: msgIn 0.2s ease;
+}
+@keyframes msgIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:none} }
+
+.msg.user { align-self: flex-end; align-items: flex-end; }
+.msg.bot  { align-self: flex-start; align-items: flex-start; }
+
+.bubble {
+  padding: 9px 13px;
+  border-radius: 15px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.msg.user .bubble { background: #1a1a2e; color: white; border-bottom-right-radius: 4px; }
+.msg.bot  .bubble { background: #f0f0f6; color: #1a1a2e; border-bottom-left-radius: 4px; }
+
+.msg-time { font-size: 10px; color: #bbb; margin-top: 3px; }
+
+.typing .bubble {
+  background: #f0f0f6;
+  padding: 12px 14px;
+}
+.dots { display: flex; gap: 4px; align-items: center; }
+.dots span {
+  width: 6px; height: 6px; border-radius: 50%; background: #bbb;
+  animation: bounce 1.2s infinite;
+}
+.dots span:nth-child(2) { animation-delay: 0.2s; }
+.dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce { 0%,80%,100%{transform:none} 40%{transform:translateY(-5px)} }
+
+.welcome-msg {
+  text-align: center;
+  padding: 16px 8px;
+  font-size: 12px;
+  color: #aaa;
+  line-height: 1.6;
+}
+.welcome-msg strong { display: block; font-size: 13px; color: #333; margin-bottom: 4px; font-family: 'Sora', sans-serif; }
+
+#vly-footer {
+  border-top: 1px solid #f0f0f5;
+  padding: 10px 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#vly-input {
+  flex: 1;
+  border: none;
+  background: #f5f5f9;
+  border-radius: 12px;
+  padding: 9px 13px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: #1a1a2e;
+  outline: none;
+  resize: none;
+  max-height: 80px;
+  line-height: 1.4;
+}
+#vly-input::placeholder { color: #bbb; }
+
+#vly-send {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e94560, #c73652);
+  border: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.15s, opacity 0.15s;
+}
+#vly-send:hover { transform: scale(1.08); }
+#vly-send:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+#vly-send svg { width: 15px; height: 15px; color: white; }
+
+@media(max-width:400px) {
+  #vly-window { right: 12px; left: 12px; width: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- FAUX SITE -->
+<header class="site-header">
+  <div class="site-logo">Velyo Immo</div>
+  <nav class="site-nav">
+    <a href="#">Vendre</a>
+    <a href="#">Louer</a>
+    <a href="#">Contact</a>
+  </nav>
+</header>
+
+<section class="site-hero">
+  <h1>Votre bien immobilier<br/>mérite le meilleur</h1>
+  <p>Estimation gratuite, vente rapide, gestion locative — à Paris et petite couronne.</p>
+  <button class="site-cta">Estimer mon bien</button>
+</section>
+
+<section class="site-services">
+  <h2>Nos services</h2>
+  <div class="services-grid">
+    <div class="service-card">
+      <div class="service-icon">🏠</div>
+      <h3>Estimation gratuite</h3>
+      <p>Un expert se déplace sous 48h pour évaluer votre bien sans engagement.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">📋</div>
+      <h3>Gestion locative</h3>
+      <p>On gère tout — locataires, loyers, entretien — pour votre tranquillité.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">🤝</div>
+      <h3>Vente de biens</h3>
+      <p>Honoraires à 4% TTC. Réseau actif sur Paris et petite couronne.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WIDGET VELYO -->
+<button id="vly-trigger" aria-label="Chat">
+  <svg class="ic-chat" fill="white" viewBox="0 0 24 24">
+    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/>
+  </svg>
+  <svg class="ic-close" fill="white" viewBox="0 0 24 24">
+    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+  </svg>
+  <div id="vly-notif">1</div>
+</button>
+
+<div id="vly-window">
+  <div id="vly-header">
+    <div class="vly-av">S</div>
+    <div class="vly-info">
+      <div class="vly-name">Sophie</div>
+      <div class="vly-status"><span class="vly-dot"></span>Disponible maintenant</div>
+    </div>
+    <div class="vly-brand">Velyo</div>
+  </div>
+
+  <div id="vly-msgs">
+    <div class="welcome-msg">
+      <strong>Bonjour 👋</strong>
+      Posez-moi vos questions sur nos biens et services.
+    </div>
+  </div>
+
+  <div id="vly-footer">
+    <textarea id="vly-input" rows="1" placeholder="Votre message..."></textarea>
+    <button id="vly-send">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"/>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+const SYSTEM_PROMPT = `
+Tu es Sophie, agent commercial de l'Velyo Immo. Tu fais partie de l'équipe — tu n'es pas un robot.
+
+DONNÉES STRICTES :
+- Services : Estimation gratuite, Gestion locative, Vente de biens
+- Zones : Paris et petite couronne (75, 92, 93, 94)
+- Horaires : Lundi-Vendredi 9h-19h, Samedi 10h-17h
+- Honoraires de vente : 4% TTC, non négociable sans accord direction
+- Estimation : gratuite, sans engagement, sous 48h
+- RDV : https://calendly.com/immo-horizon/15min
+
+RÈGLE ABSOLUE : Si une question sort de ces données, réponds exactement :
+"Je ne peux pas m'engager sur ce point. En revanche, je peux faire en sorte qu'un responsable vous rappelle. Quel est votre numéro ?"
+
+COMPORTEMENT :
+- Maximum 3 phrases par réponse
+- Termine toujours par une question orientée RDV ou contact
+- Ne dis jamais "Je suis une IA"
+- Ne salue jamais deux fois
+`.trim();
+
+let isOpen = false;
+let isTyping = false;
+let history = [];
+let firstOpen = true;
+
+const trigger = document.getElementById('vly-trigger');
+const win = document.getElementById('vly-window');
+const msgs = document.getElementById('vly-msgs');
+const input = document.getElementById('vly-input');
+const send = document.getElementById('vly-send');
+const notif = document.getElementById('vly-notif');
+
+trigger.addEventListener('click', () => {
+  isOpen = !isOpen;
+  trigger.classList.toggle('open', isOpen);
+  win.classList.toggle('open', isOpen);
+  notif.classList.add('hidden');
+  if (isOpen && firstOpen) {
+    firstOpen = false;
+    setTimeout(() => addMsg('bot', "Bonjour ! Je suis Sophie de l'Velyo Immo. Vous cherchez à vendre, acheter ou faire estimer un bien ?"), 500);
+  }
+  if (isOpen) setTimeout(() => input.focus(), 300);
+});
+
+function sendMsg() {
+  const text = input.value.trim();
+  if (!text || isTyping) return;
+  addMsg('user', text);
+  input.value = '';
+  input.style.height = 'auto';
+  history.push({ role: 'user', content: text });
+  callClaude(text);
+}
+
+send.addEventListener('click', sendMsg);
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+});
+input.addEventListener('input', () => {
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 80) + 'px';
+});
+
+async function callClaude(userMsg) {
+  isTyping = true;
+  send.disabled = true;
+  const typingEl = addTyping();
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 300,
+        temperature: 0.2,
+        system: SYSTEM_PROMPT,
+        messages: history,
+      })
+    });
+
+    const data = await res.json();
+    typingEl.remove();
+    const reply = data?.content?.[0]?.text ?? "Je rencontre un problème technique, pouvez-vous reformuler ?";
+    addMsg('bot', reply);
+    history.push({ role: 'assistant', content: reply });
+
+  } catch (e) {
+    typingEl.remove();
+    addMsg('bot', "Désolé, connexion impossible. Réessayez dans un instant.");
+  } finally {
+    isTyping = false;
+    send.disabled = false;
+  }
+}
+
+function addMsg(role, text) {
+  const wrap = document.createElement('div');
+  wrap.className = `msg ${role}`;
+  const b = document.createElement('div');
+  b.className = 'bubble';
+  b.textContent = text;
+  const t = document.createElement('span');
+  t.className = 'msg-time';
+  t.textContent = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'});
+  wrap.appendChild(b);
+  wrap.appendChild(t);
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+  return wrap;
+}
+
+function addTyping() {
+  const wrap = document.createElement('div');
+  wrap.className = 'msg bot typing';
+  const b = document.createElement('div');
+  b.className = 'bubble';
+  b.innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
+  wrap.appendChild(b);
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+  return wrap;
+}
+</script>
+
+</body>
+</html>
